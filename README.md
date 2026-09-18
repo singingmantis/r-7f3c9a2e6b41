@@ -2,8 +2,8 @@
 
 MiBox / Android CloudStream için kişisel film ve dizi deposu (12 sağlayıcı).
 
-**Durum: iki Android eklentisi derlendi ve yayınlandı (sürüm 1003).
-Yayınlanan dosyaların SHA-256 değerleri doğrulandı. MiBox oynatma testi henüz yapılmadı.**
+**Durum: 12 Android eklentisi derlendi ve yayınlandı.
+İlk iki kaynak kullanıcı tarafından MiBox’ta açıldı. Yeni kaynakların MiBox oynatma testi henüz yapılmadı.**
 
 
 ## Yeni eklenen 10 kaynak
@@ -22,7 +22,7 @@ adresleri ve sayfa yapısı değişiklikleri ayrıca kod güncellemesi gerektire
 FilmModu.live ve DiziGom sağlayıcıları gözlenen güncel HTML yapısına göre
 uyarlandı. FilmModu örneğinde Pilavyer HLS listesine HTTP 200 ile erişildi;
 bu kontrol televizyonda görüntü/ses testinin yerine geçmez.
-YabanciDizi ve HDFilmCehennemi inceleme aracına 403 döndü; MiBox erişimi
+YabanciDizi, FilmMakinesi ve FullHDFilmizlesene bilgisayardaki erişim kontrolüne 403 döndü; MiBox erişimi
 ayrıca denenmelidir.
 
 ## İlk kurulum
