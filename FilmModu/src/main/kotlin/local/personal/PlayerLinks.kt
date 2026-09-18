@@ -22,7 +22,9 @@ suspend fun resolvePersonalPlayer(url: String, referer: String, subtitleCallback
         if (stream.startsWith("https://")) {
             val origin = URI(url).let { "${it.scheme}://${it.authority}" }
             playerSubtitles(config, url).forEach { (label, subUrl) ->
-                subtitleCallback(SubtitleFile(label, subUrl))
+                subtitleCallback(SubtitleFile(label, subUrl).apply {
+                    headers = mapOf("Referer" to "$origin/", "Origin" to origin, "User-Agent" to USER_AGENT)
+                })
             }
             callback(newExtractorLink(sourceName, "Pilavyer" + if (preferOriginal) " • Özgün ses" else " • Çoklu ses", stream, ExtractorLinkType.M3U8) {
                 this.referer = "$origin/"
