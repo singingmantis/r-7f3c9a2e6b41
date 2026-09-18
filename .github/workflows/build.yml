@@ -35,7 +35,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Check packaging logic
         run: python3 -m unittest discover -s scripts -p 'test_*.py'
-      - name: Compile both plugins
+      - name: Compile personal plugins
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon makePluginsJson
@@ -80,7 +80,7 @@ jobs:
           cp ../artifacts/* .
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add repo.json plugins.json source.json LICENSE ATTRIBUTION.md EvDiziBox.cs3 EvWebteIzle.cs3
+          git add repo.json plugins.json source.json LICENSE ATTRIBUTION.md *.cs3
           if ! git diff --cached --quiet; then
             git commit -m "Build from $SOURCE_SHA"
             git push origin HEAD:builds

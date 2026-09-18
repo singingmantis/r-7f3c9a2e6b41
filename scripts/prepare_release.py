@@ -1,4 +1,4 @@
-"""Validate both compiled plugins and prepare this repository's download catalog."""
+"""Validate all compiled plugins and prepare this repository's download catalog."""
 import argparse
 import hashlib
 import json
@@ -7,7 +7,7 @@ import re
 import shutil
 import zipfile
 
-MODULES = {"EvDiziBox": "DiziBox", "EvWebteIzle": "WebteIzle"}
+MODULES = {'EvDiziBox': 'DiziBox', 'EvWebteIzle': 'WebteIzle', 'EvYabanciDizi': 'YabanciDizi', 'EvDiziGom': 'DiziGom', 'EvSezonlukDizi': 'SezonlukDizi', 'EvHDFilmCehennemi': 'HDFilmCehennemi', 'EvFilmModu': 'FilmModu', 'EvKultFilmler': 'KultFilmler', 'EvRareFilmm': 'RareFilmm', 'EvDiziPal': 'DiziPal', 'EvFilmMakinesi': 'FilmMakinesi', 'EvFullHDFilmizlesene': 'FullHDFilmizlesene'}
 
 
 def prepare(root: Path, repository: str, commit: str, output: Path):
@@ -16,8 +16,8 @@ def prepare(root: Path, repository: str, commit: str, output: Path):
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("Expected full source commit SHA")
     entries = json.loads((root / "build/plugins.json").read_text(encoding="utf-8"))
-    if len(entries) != 2 or {p["internalName"] for p in entries} != set(MODULES):
-        raise ValueError("Catalog must contain exactly our two personal plugins")
+    if len(entries) != len(MODULES) or {p["internalName"] for p in entries} != set(MODULES):
+        raise ValueError("Catalog must contain exactly the configured personal plugins")
     base = f"https://raw.githubusercontent.com/{repository}/builds"
     files = []
     for entry in entries:
@@ -49,7 +49,7 @@ def prepare(root: Path, repository: str, commit: str, output: Path):
     documents = {
         "repo.json": {
             "name": "Ev Arsivi",
-            "description": "Kisisel DiziBox ve WebteIzle eklentileri",
+            "description": "Kisisel film ve dizi eklentileri",
             "manifestVersion": 1,
             "pluginLists": [f"{base}/plugins.json"],
         },

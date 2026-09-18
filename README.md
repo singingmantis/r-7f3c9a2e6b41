@@ -1,9 +1,29 @@
 # Ev Arşivi
 
-MiBox / Android CloudStream için kişisel **DiziBox** ve **WebteIzle** deposu.
+MiBox / Android CloudStream için kişisel film ve dizi deposu (12 sağlayıcı).
 
 **Durum: iki Android eklentisi derlendi ve yayınlandı (sürüm 1003).
 Yayınlanan dosyaların SHA-256 değerleri doğrulandı. MiBox oynatma testi henüz yapılmadı.**
+
+
+## Yeni eklenen 10 kaynak
+
+YabanciDizi, DiziGom, SezonlukDizi, HDFilmCehennemi, FilmModu,
+KultFilmler, RareFilmm, DiziPal, FilmMakinesi ve FullHDFilmizlesene.
+
+Mevcut repoyu yeniden ekleme. Eklentiler ekranında **Ev Arsivi** deposunu
+tekrar açıp istediğin yeni `Ev...` paketlerini tek tek indir.
+Liste eskiyse ekranı veya uygulamayı yeniden aç. RareFilmm İngilizce
+olarak işaretlidir; görünmüyorsa dil filtresini tüm diller olarak seç.
+Yeni kaynakların MiBox üzerinde arama/bölüm/video testleri henüz yapılmadı.
+
+Bütün ana site adresleri `sites.properties` dosyasında. Video barındırıcı
+adresleri ve sayfa yapısı değişiklikleri ayrıca kod güncellemesi gerektirebilir.
+FilmModu.live ve DiziGom sağlayıcıları gözlenen güncel HTML yapısına göre
+uyarlandı. FilmModu örneğinde Pilavyer HLS listesine HTTP 200 ile erişildi;
+bu kontrol televizyonda görüntü/ses testinin yerine geçmez.
+YabanciDizi ve HDFilmCehennemi inceleme aracına 403 döndü; MiBox erişimi
+ayrıca denenmelidir.
 
 ## İlk kurulum
 
@@ -83,14 +103,14 @@ ve kişisel oturum çerezi bu projeye eklenmemelidir.
   yazar bildirimleri korunmuştur. Ayrıntılar: [ATTRIBUTION.md](ATTRIBUTION.md).
 - `sites.properties`, derleme sırasında her modülün `BuildConfig.SITE_URL`
   sabitine dönüştürülür.
-- Modül kimlikleri `EvDiziBox` / `EvWebteIzle`; diğer depolardaki asıl
+- Modül kimlikleri `Ev` ile başlar; diğer depolardaki asıl
   modül adlarından ayrıdır.
 - GitHub derlemesinde sürüm `1000 + GITHUB_RUN_NUMBER` olur. Workflow dosyasını
   silip yeniden oluşturarak sayacı sıfırlamak sürümlemeyi bozabilir.
 - CloudStream Gradle eklentisi yayınlanmış `-SNAPSHOT` kanalını kullanır. CloudStream
   API bağımlılığı upstream'deki `pre-release` kanalını kullanır; bu bağımlılık
   değişkendir; derleyici bağımlılığı da güncellenebilir. Gelecekte uyarlama gerekebilir.
-- Yayın paketi hazırlanırken iki `.cs3` dosyasının manifest sürümleri,
+- Yayın paketi hazırlanırken tüm `.cs3` dosyalarının manifest sürümleri,
   boyutları ve SHA-256 değerleri doğrulanır. Hata varsa yayın yapılmaz.
 - Her yayın `source.json` içinde tam kaynak commitini kaydeder.
 - Yerelde derlemek için Java 17 ve Android SDK gerekir:
