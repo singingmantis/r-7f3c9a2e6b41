@@ -1,0 +1,85 @@
+name: Build and publish personal plugins
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: personal-plugins-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Check packaging logic
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - name: Compile both plugins
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon makePluginsJson
+      - name: Validate packages and prepare catalog
+        env:
+          REPOSITORY: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: python3 scripts/prepare_release.py --repository "$REPOSITORY" --commit "$SOURCE_SHA"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: personal-plugins
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: published
+      - uses: actions/download-artifact@v4
+        with:
+          name: personal-plugins
+          path: artifacts
+      - name: Publish validated files on builds branch
+        working-directory: published
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin builds; then
+            git fetch origin builds
+            git checkout -B builds FETCH_HEAD
+          else
+            git checkout --orphan builds
+            git rm -rf .
+          fi
+          cp ../artifacts/* .
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add repo.json plugins.json source.json LICENSE ATTRIBUTION.md EvDiziBox.cs3 EvWebteIzle.cs3
+          if ! git diff --cached --quiet; then
+            git commit -m "Build from $SOURCE_SHA"
+            git push origin HEAD:builds
+          fi
+          echo "Repo URL: https://raw.githubusercontent.com/$GITHUB_REPOSITORY/builds/repo.json" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,11 @@
+/.gradle/
+/.kotlin/
+**/build/
+/local.properties
+/upstream-reference/
+/dist/
+/.tools/
+__pycache__/
+*.zip
+
+bakalim.py
