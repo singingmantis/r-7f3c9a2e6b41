@@ -87,9 +87,9 @@ ve kişisel oturum çerezi bu projeye eklenmemelidir.
   modül adlarından ayrıdır.
 - GitHub derlemesinde sürüm `1000 + GITHUB_RUN_NUMBER` olur. Workflow dosyasını
   silip yeniden oluşturarak sayacı sıfırlamak sürümlemeyi bozabilir.
-- CloudStream Gradle eklentisi kaynak commitine sabitlenmiştir. CloudStream
+- CloudStream Gradle eklentisi yayınlanmış `-SNAPSHOT` kanalını kullanır. CloudStream
   API bağımlılığı upstream'deki `pre-release` kanalını kullanır; bu bağımlılık
-  değişkendir ve gelecekte uyarlama gerektirebilir.
+  değişkendir; derleyici bağımlılığı da güncellenebilir. Gelecekte uyarlama gerekebilir.
 - Yayın paketi hazırlanırken iki `.cs3` dosyasının manifest sürümleri,
   boyutları ve SHA-256 değerleri doğrulanır. Hata varsa yayın yapılmaz.
 - Her yayın `source.json` içinde tam kaynak commitini kaydeder.
