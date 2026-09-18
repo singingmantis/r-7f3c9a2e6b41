@@ -2,8 +2,8 @@
 
 MiBox / Android CloudStream için kişisel **DiziBox** ve **WebteIzle** deposu.
 
-**Durum: ilk kaynak sürümü hazır; Android derlemesi, yayın ve MiBox oynatma
-testi henüz yapılmadı. Bu klasör doğrudan kurulabilir bir eklenti değildir.**
+**Durum: iki Android eklentisi derlendi ve yayınlandı (sürüm 1003).
+Yayınlanan dosyaların SHA-256 değerleri doğrulandı. MiBox oynatma testi henüz yapılmadı.**
 
 ## İlk kurulum
 
@@ -21,7 +21,7 @@ testi henüz yapılmadı. Bu klasör doğrudan kurulabilir bir eklenti değildir
 
    `https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/repo.json`
 
-   **Bu bağlantı ilk başarılı yayından önce çalışmaz.**
+   **İlk yayın tamamlandı; bu bağlantı kullanılabilir.**
 5. MiBox'ta CloudStream → Ayarlar → Eklentiler → Depo ekle bölümüne bu
    bağlantıyı gir. Depodan `EvDiziBox` ve `EvWebteIzle` paketlerini yükle.
    Kaynak listesinde `DiziBox (Kişisel)` ve `WebteIzle (Kişisel)` görünür.
