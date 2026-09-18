@@ -16,3 +16,10 @@ Turkce kurulum/bakim belgesi.
 Yayinlanan paketlerin karsilik gelen kaynak kodu ayni deponun
 main dalinda; her yayinin kesin commit bilgisi builds/source.json
 dosyasinda bulunur. GPL-3.0 lisansi bu uyarlama icin de gecerlidir.
+
+## Ek kaynaklar
+
+- YabanciDizi ve DiziGom: https://github.com/nikyokki/nik-cloudstream
+- Kaynak commit: 26255c768394649c7821dddc08862aa0dea00416 (GPL-3.0).
+- SezonlukDizi, HDFilmCehennemi, KultFilmler, RareFilmm, DiziPal, FilmMakinesi ve FullHDFilmizlesene: yukarida belirtilen feroxx kaynagi.
+- FilmModu.live icin saglayici site yapisina gore yeniden yazildi.

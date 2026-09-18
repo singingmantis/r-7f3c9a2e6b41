@@ -1,6 +1,6 @@
 {
   "name": "Ev Arsivi",
-  "description": "Kisisel DiziBox ve WebteIzle eklentileri",
+  "description": "Kisisel film ve dizi eklentileri",
   "manifestVersion": 1,
   "pluginLists": [
     "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/plugins.json"
