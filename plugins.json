@@ -2,7 +2,7 @@
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvDiziBox.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvDiziBox",
     "internalName": "EvDiziBox",
     "authors": [
@@ -17,19 +17,19 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=www.dizibox.live&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-359076be25a17228ff02321a2ff8acfb9b68c445d2cf3e1a81a1c257d3755543"
+    "fileHash": "sha256-0e8cfaa691e6d62e425f50a6064a57efa10e98873abd3a1889123d5f4def5a27"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvDiziGom.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvDiziGom",
     "internalName": "EvDiziGom",
     "authors": [
       "nikyokki"
     ],
     "description": "Kişisel uyarlama; MiBox oynatma testi bekleniyor.",
-    "fileSize": 16348,
+    "fileSize": 19186,
     "repositoryUrl": "https://github.com/singingmantis/r-7f3c9a2e6b41",
     "language": "tr",
     "tvTypes": [
@@ -37,12 +37,12 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=www.dizigom.icu&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-bc205a34310ddcef42150b994fdd357ca7c322237f40ccb6a5c3834b7d306a81"
+    "fileHash": "sha256-752892bc781319590f22196c5b6700392a824338caf4c029c2fe608c327d523c"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvDiziPal.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvDiziPal",
     "internalName": "EvDiziPal",
     "authors": [
@@ -59,12 +59,12 @@
     ],
     "iconUrl": "https://dizipal1563.com/assets/favicon/favicon-32x32.png?v=3",
     "apiVersion": 1,
-    "fileHash": "sha256-f2c98e55f57bc4b35c5311aa118d22498f19d048605003b325af9c11eb6757be"
+    "fileHash": "sha256-4cdc528aee4e87878464f4b19181c52fa4c4327fbe6a6deb1bb94ac7ed8409c0"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvFilmMakinesi.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvFilmMakinesi",
     "internalName": "EvFilmMakinesi",
     "authors": [
@@ -80,19 +80,19 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=filmmakinesi.to&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-7a09bee92ef483a2afd62c6ec7406ad9131c6ce31e83caa14e76f5ad09ecb1fe"
+    "fileHash": "sha256-a49da1a4300641a954432721b5b1eaed35982eb6a9acb955bc12d472886b0cd9"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvFilmModu.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvFilmModu",
     "internalName": "EvFilmModu",
     "authors": [
       "keyiflerolsun"
     ],
     "description": "Kişisel uyarlama; MiBox oynatma testi bekleniyor.",
-    "fileSize": 20854,
+    "fileSize": 26698,
     "repositoryUrl": "https://github.com/singingmantis/r-7f3c9a2e6b41",
     "language": "tr",
     "tvTypes": [
@@ -101,19 +101,19 @@
     ],
     "iconUrl": "https://www.filmmodu.one/icon/favicon.ico",
     "apiVersion": 1,
-    "fileHash": "sha256-d635ca05392ea37c890f37e1f681a5f251432c2937c24c63ebc90c09a8ced053"
+    "fileHash": "sha256-709abd9b42a84f00a8a263b662c8c24e602592803d80656dd70bdf7d7ed1870f"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvFullHDFilmizlesene.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvFullHDFilmizlesene",
     "internalName": "EvFullHDFilmizlesene",
     "authors": [
       "keyiflerolsun"
     ],
     "description": "Kişisel uyarlama; MiBox oynatma testi bekleniyor.",
-    "fileSize": 40111,
+    "fileSize": 40362,
     "repositoryUrl": "https://github.com/singingmantis/r-7f3c9a2e6b41",
     "language": "tr",
     "tvTypes": [
@@ -121,12 +121,12 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=www.fullhdfilmizlesene.now&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-b7d5396b873dbaafa5a939fa6d7c20409d69fd16c0af5945a6e1b874a9870112"
+    "fileHash": "sha256-8d7025a7725a7b84d319b8154b34b09d8cc414bc32f8089adfce53836eb21138"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvHDFilmCehennemi.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvHDFilmCehennemi",
     "internalName": "EvHDFilmCehennemi",
     "authors": [
@@ -143,12 +143,12 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=www.hdfilmcehennemi.nl&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-0244f9b8979574bf9d8397cd7a14c0d28f0d7265ae52cb7355cb539a7b773bf5"
+    "fileHash": "sha256-e7c81d5152ebad7f30320f1fb5638306ee150ff3c0ef5d4a7f13f8887bc7fe9a"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvKultFilmler.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvKultFilmler",
     "internalName": "EvKultFilmler",
     "authors": [
@@ -164,19 +164,19 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=kultfilmler.net&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-99a94657f44b6b87a79b2376e26407168ea447d24bf86fa3852f936c3d11de16"
+    "fileHash": "sha256-36d309e171898cda05782723e5c9a778b1b1dbfc3ae82acb85f1db459766ab70"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvRareFilmm.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvRareFilmm",
     "internalName": "EvRareFilmm",
     "authors": [
       "keyiflerolsun"
     ],
     "description": "Kişisel uyarlama; MiBox oynatma testi bekleniyor.",
-    "fileSize": 16591,
+    "fileSize": 16135,
     "repositoryUrl": "https://github.com/singingmantis/r-7f3c9a2e6b41",
     "language": "en",
     "tvTypes": [
@@ -184,12 +184,12 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=rarefilmm.com&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-d685260cd16b005c247e7e5b909459b9f1923867679413e6c503c5c3c3d3a915"
+    "fileHash": "sha256-c8bec613e859ed865fa76c8ff2cd7562deb32ebec1a89a0a865314c6662f2fb4"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvSezonlukDizi.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvSezonlukDizi",
     "internalName": "EvSezonlukDizi",
     "authors": [
@@ -205,12 +205,12 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=sezonlukdizi.cc&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-50caedbab89b712e7bacd7076cb7782560b4bf02561f58f5b8f0f086bb02d056"
+    "fileHash": "sha256-87637c5f13e7e2077c17f0b89bfe47a8b65e1573c856c408e7376e15a306775d"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvWebteIzle.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvWebteIzle",
     "internalName": "EvWebteIzle",
     "authors": [
@@ -225,19 +225,19 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=webteizle.info&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-09a6eb463b7fe4767f44b6973d974515cdecc9af4de59a5c808ef9b7fc34a975"
+    "fileHash": "sha256-4fa2ac0e411f6915920db52c212df0d027bbac47e242ec4d4df7b49b32cf39cf"
   },
   {
     "url": "https://raw.githubusercontent.com/singingmantis/r-7f3c9a2e6b41/builds/EvYabanciDizi.cs3",
     "status": 1,
-    "version": 1005,
+    "version": 1006,
     "name": "EvYabanciDizi",
     "internalName": "EvYabanciDizi",
     "authors": [
       "nikyokki"
     ],
     "description": "Kişisel uyarlama; MiBox oynatma testi bekleniyor.",
-    "fileSize": 47401,
+    "fileSize": 55570,
     "repositoryUrl": "https://github.com/singingmantis/r-7f3c9a2e6b41",
     "language": "tr",
     "tvTypes": [
@@ -245,6 +245,6 @@
     ],
     "iconUrl": "https://www.google.com/s2/favicons?domain=yabancidizi.news&sz=%size%",
     "apiVersion": 1,
-    "fileHash": "sha256-52a9f17f7d70b41fcc23282f0a692c64715332f1169a32108a9bb20341dd298e"
+    "fileHash": "sha256-355bec20998bb4a66e2cfb6bca75a6a75e22e7cdc279b3a6ec7411b55df7e284"
   }
 ]
