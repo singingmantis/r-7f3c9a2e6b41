@@ -16,3 +16,5 @@ cloudstream {
     tvTypes = listOf("Movie")
     iconUrl = "https://www.google.com/s2/favicons?domain=rarefilmm.com&sz=%size%"
 }
+
+dependencies { add("testImplementation", "junit:junit:4.13.2") }

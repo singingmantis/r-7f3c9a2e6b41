@@ -6,6 +6,8 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import local.personal.evfilmmodu.BuildConfig
 import local.personal.resolvePersonalPlayer
+import local.personal.OriginalAudioInterceptor
+import okhttp3.Interceptor
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.net.URLEncoder
@@ -69,6 +71,9 @@ class FilmModu : MainAPI() {
         val watch = doc.selectFirst("a[href*=/izle]")?.attr("href")?.let { fixUrl(it) } ?: "${url.trimEnd('/')}/izle"
         return newMovieLoadResponse(title, url, TvType.Movie, watch) { posterUrl = poster; this.plot = plot; this.year = year }
     }
+    override fun getVideoInterceptor(extractorLink: ExtractorLink): Interceptor? =
+        extractorLink.extractorData?.let { OriginalAudioInterceptor(extractorLink.url, it) }
+
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean =
-        resolvePersonalPlayer(data, "$mainUrl/", subtitleCallback, callback)
+        resolvePersonalPlayer(data, "$mainUrl/", subtitleCallback, callback, sourceName = name, preferOriginal = true)
 }

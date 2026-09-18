@@ -113,85 +113,28 @@ class FullHDFilmizlesene : MainAPI() {
         }
     }
 
-    private fun atob(s: String): String {
-        return String(Base64.decode(s, Base64.DEFAULT))
-    }
-
-    private fun rtt(s: String): String {
-        fun rot13Char(c: Char): Char {
-            return when (c) {
-                in 'a'..'z' -> ((c - 'a' + 13) % 26 + 'a'.code).toChar()
-                in 'A'..'Z' -> ((c - 'A' + 13) % 26 + 'A'.code).toChar()
-                else -> c
-            }
-        }
-
-        return s.map { rot13Char(it) }.joinToString("")
-    }
-
-    private fun getVideoLinks(document: Document): List<Map<String, String>> {
-        val scriptElement = document.select("script").firstOrNull { it.data().isNotEmpty() }
-        val scriptContent = scriptElement?.data()?.trim() ?: return emptyList()
-
-        val scxData         = Regex("scx = (.*?);").find(scriptContent)?.groupValues?.get(1) ?: return emptyList()
-        val scxMap: SCXData = jacksonObjectMapper().readValue(scxData)
-        val keys             = listOf("atom", "advid", "advidprox", "proton", "fast", "fastly", "tr", "en")
-
-        val linkList = mutableListOf<Map<String, String>>()
-
-        for (key in keys) {
-            val t = when (key) {
-                "atom"      -> scxMap.atom?.sx?.t
-                "advid"     -> scxMap.advid?.sx?.t
-                "advidprox" -> scxMap.advidprox?.sx?.t
-                "proton"    -> scxMap.proton?.sx?.t
-                "fast"      -> scxMap.fast?.sx?.t
-                "fastly"    -> scxMap.fastly?.sx?.t
-                "tr"        -> scxMap.tr?.sx?.t
-                "en"        -> scxMap.en?.sx?.t
-                else        -> null
-            }
-
-            when (t) {
-                is List<*> -> {
-                    val links = t.filterIsInstance<String>().map { link -> atob(rtt(link)) }
-                    linkList.add(mapOf(key to links.joinToString(",")))
-                }
-                is Map<*, *> -> {
-                    val links = t.mapValues { (_, value) ->
-                        if (value is String) atob(rtt(value)) else ""
-                    }
-                    val safeLinks = links.mapKeys { (key, _) ->
-                        key?.toString() ?: "Unknown"
-                    }
-                    linkList.add(safeLinks)
-                }
-            }
-        }
-
-        return linkList
-    }
-
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
-        Log.d("FHD", "data » $data")
-        val document    = app.get(data).document
-        val videoLinks = getVideoLinks(document)
-        Log.d("FHD", "videoLinks » $videoLinks")
-        if (videoLinks.isEmpty()) return false
-
-
-        for (videoMap in videoLinks) {
-            for ((key, value) in videoMap) {
-                val videoUrl = fixUrlNull(value) ?: continue
-                if (videoUrl.contains("turbo.imgz.me")) {
-                    loadExtractor("${key}||${videoUrl}", "${mainUrl}/", subtitleCallback, callback)
-                } else {
-                    loadExtractor(videoUrl, "${mainUrl}/", subtitleCallback, callback)
-                }
-            }
+        val document = app.get(data, interceptor = com.lagradost.cloudstream3.network.CloudflareKiller()).document
+        val links = extractScxLinks(document.html()).toMutableList()
+        document.select("iframe[src], iframe[data-src]").forEach {
+            val src = it.attr("src").ifBlank { it.attr("data-src") }
+            if (src.isNotBlank()) links.add("Video" to src)
         }
-
-        return true
+        var found = false
+        for ((label, value) in links.distinct()) {
+            val videoUrl = fixUrlNull(value) ?: continue
+            try {
+                val onLink: (ExtractorLink) -> Unit = { found = true; callback(it) }
+                if (java.net.URI(videoUrl).host == "turbo.imgz.me") {
+                    // Pass the real URL directly to our extractor; a label||URL is not a valid URL for the registry.
+                    TurboImgz().getUrl("$label||$videoUrl", data, subtitleCallback, onLink)
+                } else {
+                    loadExtractor(videoUrl, data, subtitleCallback, onLink)
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { /* A dead mirror must not suppress the remaining choices. */ }
+        }
+        return found
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

@@ -43,5 +43,5 @@ class DiziGom : MainAPI() {
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) { posterUrl = poster; this.plot = plot }
     }
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean =
-        resolvePersonalPlayer(data, "$mainUrl/", subtitleCallback, callback)
+        resolvePersonalPlayer(data, "$mainUrl/", subtitleCallback, callback, sourceName = name)
 }

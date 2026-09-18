@@ -16,3 +16,5 @@ cloudstream {
     tvTypes = listOf("Movie")
     iconUrl = "https://www.google.com/s2/favicons?domain=www.fullhdfilmizlesene.now&sz=%size%"
 }
+
+dependencies { add("testImplementation", "junit:junit:4.13.2") }

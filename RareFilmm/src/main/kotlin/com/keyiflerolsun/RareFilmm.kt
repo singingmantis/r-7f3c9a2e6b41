@@ -81,11 +81,18 @@ class RareFilmm : MainAPI() {
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         Log.d("RRF", "data » $data")
         val document = app.get(data).document
-        val iframe   = fixUrlNull(document.selectFirst("article iframe")?.attr("src")) ?: return false
-        Log.d("RRF", "iframe » $iframe")
-
-        loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
-
-        return true
+        var found = false
+        for (frame in document.select("article iframe[src], article iframe[data-src]")) {
+            val iframe = fixUrlNull(frame.attr("src").ifBlank { frame.attr("data-src") }) ?: continue
+            try {
+                val onLink: (ExtractorLink) -> Unit = { found = true; callback(it) }
+                val host = java.net.URI(iframe).host.orEmpty()
+                if (host == "ok.ru" || host.endsWith(".ok.ru") || host == "odnoklassniki.ru") {
+                    OkRuSSL().getUrl(iframe, data, subtitleCallback, onLink)
+                } else loadExtractor(iframe, data, subtitleCallback, onLink)
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { /* Other embeds may still work. */ }
+        }
+        return found
     }
 }

@@ -16,3 +16,5 @@ cloudstream {
     tvTypes = listOf("Movie", "TvSeries")
     iconUrl = "https://www.filmmodu.one/icon/favicon.ico"
 }
+
+dependencies { add("testImplementation", "junit:junit:4.13.2") }
