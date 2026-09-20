@@ -494,8 +494,7 @@ class HDFilmCehennemi : MainAPI() {
         }
         val stream = videoUrl?.substringAfter("https", "")?.takeIf { it.isNotBlank() }?.let { "https$it" } ?: return false
         val origin = runCatching { java.net.URI(url).let { "${it.scheme}://${it.host}" } }.getOrDefault(mainUrl)
-        // CloudStream must receive subtitles before the video link. Failures remain isolated so
-        // a malformed subtitle can never discard an already resolved video URL.
+        // Collect subtitles before emitting the video; isolate subtitle parsing failures.
         try {
             val subtitleUrls = mutableSetOf<String>()
             document.select("track[src]").forEach { track ->
@@ -504,10 +503,10 @@ class HDFilmCehennemi : MainAPI() {
                     subtitleCallback(newSubtitleFile(track.attr("label").ifBlank { "Altyazı" }, subUrl))
                 }
             }
-            Regex("""tracks\s*:\s*\[(.*?)]""", RegexOption.DOT_MATCHES_ALL)
+            Regex("""tracks\s*:\s*\[(.*?)\]""", RegexOption.DOT_MATCHES_ALL)
                 .findAll(response.text)
                 .forEach { tracks ->
-                    Regex("""\{[^{}]*}""").findAll(tracks.groupValues[1]).forEach { item ->
+                    Regex("""\{[^{}]*\}""").findAll(tracks.groupValues[1]).forEach { item ->
                         val file = Regex("""["']file["']\s*:\s*["'](.*?)["']""")
                             .find(item.value)?.groupValues?.get(1)
                             ?.replace("\\/", "/")
