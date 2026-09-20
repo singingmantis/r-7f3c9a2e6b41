@@ -68,7 +68,7 @@ open class RapidVid : ExtractorApi() {
     }
 
     private fun parseTracks(html: String): List<Pair<String, String>> {
-        return Regex("""\{[^{}]*['"]file['"]\s*:\s*['"]([^'"]+)['"][^{}]*['"]label['"]\s*:\s*['"]([^'"]+)['"][^{}]*}""")
+        return Regex("""\{[^{}]*['"]file['"]\s*:\s*['"]([^'"]+)['"][^{}]*['"]label['"]\s*:\s*['"]([^'"]+)['"][^{}]*\}""")
             .findAll(html).mapNotNull {
                 val file = it.groupValues[1].replace("\\/", "/")
                 if (file.startsWith("http") && !file.contains(".m3u8")) it.groupValues[2] to file else null

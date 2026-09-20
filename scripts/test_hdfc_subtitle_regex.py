@@ -52,6 +52,13 @@ class SubtitleRegexTest(unittest.TestCase):
         finally:
             self.close(handle)
 
+    def test_rapidvid_subtitle_pattern(self):
+        source = (Path(__file__).resolve().parents[1] / "FullHDFilmizlesene/src/main/kotlin/com/keyiflerolsun/RapidVidExtractor.kt").read_text(encoding="utf-8")
+        section = source.split("private fun parseTracks")[1]
+        pattern = re.search(r'Regex\("""(.*?)"""', section, re.S).group(1)
+        sample = '{"file":"https://example.org/tr.vtt","label":"Turkish"}'
+        self.assertEqual(self.matches(pattern, sample), 1)
+
     def test_subtitle_patterns_from_provider(self):
         source = (Path(__file__).resolve().parents[1] / "HDFilmCehennemi/src/main/kotlin/com/keyiflerolsun/HDFilmCehennemi.kt").read_text(encoding="utf-8")
         section = source.split("val subtitleUrls =")[1].split("catch (e:")[0]
