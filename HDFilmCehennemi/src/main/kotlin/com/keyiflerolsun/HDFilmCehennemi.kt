@@ -349,6 +349,127 @@ class HDFilmCehennemi : MainAPI() {
         }
     }
 
+    /**
+     * The player randomizes identifiers and numeric constants on every response.
+     * Read those constants from the generated decoder instead of matching a fixed dc_* name.
+     */
+    private fun decodeRotatingPlayer(script: String): String? {
+        val call = Regex(
+            """(?:var|let|const)\s+\w+\s*=\s*(\w+)\s*\(\s*(["'])(.*?)\2\.split\(\s*(["'])(.)\4\s*\)\s*\)""",
+            RegexOption.DOT_MATCHES_ALL
+        ).find(script) ?: return null
+        val functionName = call.groupValues[1]
+        val parts = call.groupValues[3].replace("\\/", "/").split(call.groupValues[5])
+            .toMutableList()
+        val functionStart = Regex("""(?:var|let|const)\s+${Regex.escape(functionName)}\s*=\s*function\s*\([^)]*\)\s*\{""")
+            .find(script)?.range?.last ?: return null
+        val functionBody = extractBracedBody(script, functionStart) ?: return null
+
+        val positions = Regex(
+            """\.length\s*-\s*(\d+)\s*,\s*\w+\s*=\s*\w+\s*%\s*(\d+)\s*,\s*\w+\s*=\s*(\d+)\s*\+\s*\(\w+\s*%\s*(\d+)\)"""
+        ).find(functionBody) ?: return null
+        val reducedLength = parts.size - positions.groupValues[1].toInt()
+        val seedIndex = reducedLength % positions.groupValues[2].toInt()
+        val operationIndex = positions.groupValues[3].toInt() + reducedLength % positions.groupValues[4].toInt()
+        if (operationIndex !in parts.indices) return null
+        val operations = parts.removeAt(operationIndex)
+        if (seedIndex !in parts.indices) return null
+        val seed = parts.removeAt(seedIndex)
+        var value = parts.joinToString("")
+
+        val seedHash = Regex("""=\s*\(\w+\s*\*\s*(\d+)\s*\+\s*\w+\)\s*%\s*(\d+)""")
+            .find(functionBody) ?: return null
+        val shiftBits = Regex("""charCodeAt\([^)]*\).*?<<\s*(\d+)""", RegexOption.DOT_MATCHES_ALL)
+            .find(functionBody)?.groupValues?.get(1)?.toIntOrNull() ?: 1
+        var hash = 0
+        var mixed = 0
+        seed.forEachIndexed { index, char ->
+            hash = (hash * seedHash.groupValues[1].toInt() + char.code) % seedHash.groupValues[2].toInt()
+            mixed = if (Regex("""\w+\s*=\s*\(\w+\s*\+\s*\(\(""").containsMatchIn(functionBody)) {
+                (mixed + ((char.code shl shiftBits) xor index)) and 255
+            } else {
+                (mixed xor (char.code + index)) and 255
+            }
+        }
+
+        val initial = Regex("""=\s*\(\w+\s*\*\s*(\d+)\s*\+\s*\w+\)\s*%\s*256""")
+            .find(functionBody)?.groupValues?.get(1)?.toIntOrNull() ?: 1
+        val step = Regex("""=\s*\(\w+\s*%\s*(\d+)\)\s*\+\s*(\d+)""")
+            .find(functionBody) ?: return null
+        val randomSeed = Regex(
+            """=\s*\(\(\w+\s*\*\s*(\d+)\s*\+\s*\w+\)\s*%\s*(\d+)\)\s*\+\s*(\d+)"""
+        ).find(functionBody) ?: return null
+        var state = ((mixed * randomSeed.groupValues[1].toInt() + hash) %
+            randomSeed.groupValues[2].toInt()) + randomSeed.groupValues[3].toInt()
+
+        val operationChars = Regex("""===\s*['"](.?)['"]""").findAll(functionBody)
+            .map { it.groupValues[1].single() }.toList()
+        val base64Char = operationChars.getOrNull(0) ?: return null
+        val reverseChar = operationChars.getOrNull(1) ?: return null
+        for (operation in operations.reversed()) {
+            value = when (operation) {
+                base64Char -> decodeBase64Latin1(value)
+                reverseChar -> value.reversed()
+                else -> caesar(value, (26 - ((operation.code - 96) % 26)) % 26)
+            }
+        }
+        if (operations.length > 2048) value = value.reversed()
+
+        val shuffle = Regex("""=\s*\(\w+\s*\*\s*(\d+)\s*\+\s*(\d+)\)\s*%\s*(\d+)""")
+            .findAll(functionBody).lastOrNull() ?: return null
+        val swaps = IntArray(value.length)
+        for (index in value.length - 1 downTo 1) {
+            state = (state * shuffle.groupValues[1].toInt() + shuffle.groupValues[2].toInt()) %
+                shuffle.groupValues[3].toInt()
+            swaps[index] = state % (index + 1)
+        }
+        val chars = value.toCharArray()
+        for (index in 1 until chars.size) {
+            val other = swaps[index]
+            val temp = chars[index]
+            chars[index] = chars[other]
+            chars[other] = temp
+        }
+
+        val xorState = Regex("""=\s*\(\w+\s*\*\s*(\d+)\s*\+\s*\w+\)\s*%\s*256""")
+            .findAll(functionBody).lastOrNull()?.groupValues?.get(1)?.toIntOrNull() ?: 1
+        var accumulator = (hash * initial + mixed) % 256
+        val increment = (mixed % step.groupValues[1].toInt()) + step.groupValues[2].toInt()
+        return buildString(chars.size) {
+            chars.forEach { char ->
+                accumulator = (accumulator * xorState + increment) % 256
+                append((char.code xor accumulator).toChar())
+                accumulator = (accumulator + char.code) % 256
+            }
+        }.trim().takeIf { it.startsWith("https://") }
+    }
+
+    private fun extractBracedBody(text: String, openingBrace: Int): String? {
+        var depth = 1
+        var index = openingBrace + 1
+        while (index < text.length && depth > 0) {
+            when (text[index]) {
+                '{' -> depth++
+                '}' -> depth--
+            }
+            index++
+        }
+        return if (depth == 0) text.substring(openingBrace + 1, index - 1) else null
+    }
+
+    private fun decodeBase64Latin1(value: String): String {
+        val padded = value + "=".repeat((4 - value.length % 4) % 4)
+        return String(android.util.Base64.decode(padded, android.util.Base64.DEFAULT), Charsets.ISO_8859_1)
+    }
+
+    private fun caesar(value: String, shift: Int): String = value.map { char ->
+        when (char) {
+            in 'a'..'z' -> ('a'.code + (char - 'a' + shift) % 26).toChar()
+            in 'A'..'Z' -> ('A'.code + (char - 'A' + shift) % 26).toChar()
+            else -> char
+        }
+    }.joinToString("")
+
     private suspend fun invokeLocalSource(
         source: String,
         url: String,
@@ -360,10 +481,16 @@ class HDFilmCehennemi : MainAPI() {
         var videoUrl: String? = null
         for (script in document.select("script").map { it.data() }.filter { it.isNotBlank() }) {
             val unpacked = if (script.contains("eval(function")) runCatching { getAndUnpack(script) }.getOrDefault(script) else script
-            videoUrl = decodeKnownVariants(unpacked)
+            videoUrl = decodeRotatingPlayer(unpacked)
+                ?: decodeRotatingPlayer(script)
+                ?: decodeKnownVariants(unpacked)
                 ?: decryptLocalUrl(unpacked)
-                ?: Regex("""["']contentUrl["']\s*:\s*["']([^"']+)["']""").find(unpacked)?.groupValues?.get(1)
             if (!videoUrl.isNullOrBlank()) break
+        }
+        // Some pages keep an expired schema.org contentUrl. Use it only if no player decoder succeeded.
+        if (videoUrl.isNullOrBlank()) {
+            videoUrl = Regex("""["']contentUrl["']\s*:\s*["']([^"']+)["']""")
+                .find(response.text)?.groupValues?.get(1)
         }
         val stream = videoUrl?.substringAfter("https", "")?.takeIf { it.isNotBlank() }?.let { "https$it" } ?: return false
         val origin = runCatching { java.net.URI(url).let { "${it.scheme}://${it.host}" } }.getOrDefault(mainUrl)
@@ -373,10 +500,14 @@ class HDFilmCehennemi : MainAPI() {
         }
         callback(newExtractorLink(
             source, source, stream,
-            if (stream.contains(".mp4")) ExtractorLinkType.VIDEO else ExtractorLinkType.M3U8
+            if (stream.contains(".m3u8") || stream.contains("/hls/") || stream.contains("master.txt")) {
+                ExtractorLinkType.M3U8
+            } else {
+                ExtractorLinkType.VIDEO
+            }
         ) {
             referer = url
-            headers = mapOf("Referer" to url, "Origin" to origin)
+            headers = mapOf("Referer" to "$origin/", "Origin" to origin)
             quality = Qualities.Unknown.value
         })
         return true

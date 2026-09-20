@@ -151,19 +151,27 @@ class FilmMakinesi : MainAPI() {
         Log.d(name, "Sayfa yüklendi")
 
         val targets = mutableListOf<String>()
-        document.select(".video-parts a[data-video_url], .video-parts a[data-video-url]").forEach {
+        document.select("[data-video_url], [data-video-url]").forEach {
             targets += it.attr("data-video_url").ifBlank { it.attr("data-video-url") }
         }
-        document.select(".after-player iframe[src], .after-player iframe[data-src], iframe.player[src], iframe.player[data-src]").forEach {
+        document.select("iframe[src], iframe[data-src]").forEach {
             targets += it.attr("src").ifBlank { it.attr("data-src") }
         }
+        // Player attributes are occasionally injected into malformed HTML that Jsoup normalizes away.
+        Regex("""(?:data-video_url|data-video-url|data-src|src)\s*=\s*["']([^"']+)["']""", RegexOption.IGNORE_CASE)
+            .findAll(document.html())
+            .map { it.groupValues[1].replace("&amp;", "&") }
+            .filter { it.startsWith("http://") || it.startsWith("https://") || it.startsWith("//") }
+            .forEach { targets += it }
 
         var found = false
         for (raw in targets.filter { it.isNotBlank() }.distinct()) {
             val embedUrl = fixUrlNull(raw) ?: continue
+            val host = runCatching { java.net.URI(embedUrl).host.orEmpty() }.getOrDefault("")
+            if (host.isBlank() || host == java.net.URI(mainUrl).host ||
+                host.contains("youtube") || host.contains("youtu.be")) continue
             val onLink: (ExtractorLink) -> Unit = { found = true; callback(it) }
             try {
-                val host = runCatching { java.net.URI(embedUrl).host.orEmpty() }.getOrDefault("")
                 when {
                     host.contains("rapidvid") || host.contains("imgz.me") ->
                         CurrentRapidExtractor().getUrl(embedUrl, data, subtitleCallback, onLink)

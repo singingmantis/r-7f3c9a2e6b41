@@ -126,10 +126,7 @@ class FullHDFilmizlesene : MainAPI() {
             try {
                 val onLink: (ExtractorLink) -> Unit = { found = true; callback(it) }
                 val host = runCatching { java.net.URI(videoUrl).host.orEmpty() }.getOrDefault("")
-                if (host == "turbo.imgz.me") {
-                    // Pass the real URL directly to our extractor; a label||URL is not a valid URL for the registry.
-                    TurboImgz().getUrl("$label||$videoUrl", data, subtitleCallback, onLink)
-                } else if (host.contains("rapidvid") || host.contains("imgz.me")) {
+                if (host.contains("rapidvid") || host.contains("imgz.me")) {
                     RapidVid().getUrl(videoUrl, data, subtitleCallback, onLink)
                 } else if (host.contains("vidmoxy")) {
                     VidMoxy().getUrl(videoUrl, data, subtitleCallback, onLink)
