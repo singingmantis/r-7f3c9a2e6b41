@@ -494,19 +494,8 @@ class HDFilmCehennemi : MainAPI() {
         }
         val stream = videoUrl?.substringAfter("https", "")?.takeIf { it.isNotBlank() }?.let { "https$it" } ?: return false
         val origin = runCatching { java.net.URI(url).let { "${it.scheme}://${it.host}" } }.getOrDefault(mainUrl)
-        callback(newExtractorLink(
-            source, source, stream,
-            if (stream.contains(".m3u8") || stream.contains("/hls/") || stream.contains("master.txt")) {
-                ExtractorLinkType.M3U8
-            } else {
-                ExtractorLinkType.VIDEO
-            }
-        ) {
-            referer = url
-            headers = mapOf("Referer" to "$origin/", "Origin" to origin)
-            quality = Qualities.Unknown.value
-        })
-        // Subtitles are optional: a malformed entry must never discard an already resolved video.
+        // CloudStream must receive subtitles before the video link. Failures remain isolated so
+        // a malformed subtitle can never discard an already resolved video URL.
         try {
             val subtitleUrls = mutableSetOf<String>()
             document.select("track[src]").forEach { track ->
@@ -542,6 +531,18 @@ class HDFilmCehennemi : MainAPI() {
         } catch (e: Exception) {
             Log.w("HDCH", "Altyazılar ayrıştırılamadı", e)
         }
+        callback(newExtractorLink(
+            source, source, stream,
+            if (stream.contains(".m3u8") || stream.contains("/hls/") || stream.contains("master.txt")) {
+                ExtractorLinkType.M3U8
+            } else {
+                ExtractorLinkType.VIDEO
+            }
+        ) {
+            referer = url
+            headers = mapOf("Referer" to "$origin/", "Origin" to origin)
+            quality = Qualities.Unknown.value
+        })
         return true
     }
 
