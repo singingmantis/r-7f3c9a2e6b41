@@ -8,7 +8,7 @@ import com.lagradost.cloudstream3.utils.*
 
 open class VidMoxy : ExtractorApi() {
     override val name            = "VidMoxy"
-    override val mainUrl         = "https://vidmoxy.com"
+    override val mainUrl         = "https://vidmoxy.net"
     override val requiresReferer = true
 
     override suspend fun getUrl(url: String, referer: String?, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit) {
@@ -30,11 +30,11 @@ open class VidMoxy : ExtractorApi() {
             )
         }
 
-        var extractedValue  = Regex("""file": "(.*)",""").find(videoReq)?.groupValues?.get(1)
+        var extractedValue  = Regex("""file["']?\s*:\s*["']((?:\\x[0-9a-fA-F]{2})+)["']""").find(videoReq)?.groupValues?.get(1)
         val decoded: String?
 
         if (extractedValue != null) {
-            val bytes = extractedValue.split("\\x").filter { it.isNotEmpty() }.map { it.toInt(16).toByte() }.toByteArray()
+            val bytes = extractedValue.split("\\x").filter { it.isNotEmpty() }.map { it.take(2).toInt(16).toByte() }.toByteArray()
             decoded   = String(bytes, Charsets.UTF_8)
         } else {
             val evaljwSetup = Regex("""\};\s*(eval\(function[\s\S]*?)var played = \d+;""").find(videoReq)?.groupValues?.get(1) ?: throw ErrorLoadingException("File not found")
@@ -54,7 +54,8 @@ open class VidMoxy : ExtractorApi() {
 				type = ExtractorLinkType.M3U8
             ) {
                 quality = Qualities.Unknown.value
-                headers = mapOf("Referer" to extRef)
+                this.referer = url
+                headers = mapOf("Referer" to url)
             }
         )
     }

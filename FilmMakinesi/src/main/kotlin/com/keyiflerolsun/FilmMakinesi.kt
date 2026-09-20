@@ -150,27 +150,35 @@ class FilmMakinesi : MainAPI() {
         val document = app.get(data, referer = mainUrl).document
         Log.d(name, "Sayfa yüklendi")
 
-        val videoParts = document.select(".video-parts a[data-video_url]")
-        Log.d(name, "Video part sayısı: ${videoParts.size}")
-
-        if (videoParts.isNotEmpty()) {
-            videoParts.forEachIndexed { index, part ->
-                val embedUrl = part.attr("data-video_url")
-                val label = part.text().trim()
-                Log.d(name, "Part #$index - label: '$label', url: '$embedUrl'")
-                if (embedUrl.isNotBlank()) {
-                    loadExtractor(embedUrl, data, subtitleCallback, callback)
-                }
-            }
-        } else {
-            val iframeSrc = document.selectFirst(".after-player iframe")?.attr("data-src")
-            Log.d(name, "Fallback iframe: $iframeSrc")
-            if (iframeSrc != null) {
-                loadExtractor(iframeSrc, data, subtitleCallback, callback)
-            }
+        val targets = mutableListOf<String>()
+        document.select(".video-parts a[data-video_url], .video-parts a[data-video-url]").forEach {
+            targets += it.attr("data-video_url").ifBlank { it.attr("data-video-url") }
+        }
+        document.select(".after-player iframe[src], .after-player iframe[data-src], iframe.player[src], iframe.player[data-src]").forEach {
+            targets += it.attr("src").ifBlank { it.attr("data-src") }
         }
 
-        Log.d(name, "loadLinks tamamlandı")
-        return true
+        var found = false
+        for (raw in targets.filter { it.isNotBlank() }.distinct()) {
+            val embedUrl = fixUrlNull(raw) ?: continue
+            val onLink: (ExtractorLink) -> Unit = { found = true; callback(it) }
+            try {
+                val host = runCatching { java.net.URI(embedUrl).host.orEmpty() }.getOrDefault("")
+                when {
+                    host.contains("rapidvid") || host.contains("imgz.me") ->
+                        CurrentRapidExtractor().getUrl(embedUrl, data, subtitleCallback, onLink)
+                    host.contains("closeload") ->
+                        CloseLoadExtractor().getUrl(embedUrl, data, subtitleCallback, onLink)
+                    host.startsWith("rapid.") ->
+                        RapidExtractor().getUrl(embedUrl, data, subtitleCallback, onLink)
+                    else -> loadExtractor(embedUrl, data, subtitleCallback, onLink)
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(name, "Oynatıcı çözülemedi: $embedUrl", e)
+            }
+        }
+        return found
     }
 }

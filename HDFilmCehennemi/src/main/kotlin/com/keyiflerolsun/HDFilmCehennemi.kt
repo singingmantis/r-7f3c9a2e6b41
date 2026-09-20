@@ -311,81 +311,126 @@ class HDFilmCehennemi : MainAPI() {
         }
     }
 
-    private suspend fun invokeLocalSource(source: String, url: String, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit ) {
-        val script    = app.get(url, referer = "${mainUrl}/", interceptor = interceptor).document.select("script").find { it.data().contains("sources:") }?.data() ?: return
-        Log.d("HDCH", "script » $script")
-        val unpackedScript = getAndUnpack(script)
-        val decryptedUrl = decryptLocalUrl(unpackedScript) ?: return
-        val lastUrl = decryptedUrl.substringAfter("https").let { "https$it" }
-        val subData   = script.substringAfter("tracks: [").substringBefore("]")
-        Log.d("HDCH", "subData » $subData")
-        AppUtils.tryParseJson<List<SubSource>>("[${subData}]")?.filter { it.kind == "captions"}?.forEach {
-            val subtitleUrl = "${mainUrl}${it.file}/"
+    private fun decodeKnownVariants(script: String): String? {
+        val array = Regex("""dc_\w+\s*\(\s*\[([\s\S]*?)]\s*\)""").find(script)?.groupValues?.get(1)
+            ?: Regex("""\(\s*\[([\s\S]*?)]\s*\)""").find(script)?.groupValues?.get(1)
+            ?: return null
+        val parts = Regex("""['"]([^'"]+)['"]""").findAll(array).map { it.groupValues[1] }.toList()
+        if (parts.isEmpty()) return null
+        val joined = parts.joinToString("")
+        val reversed = joined.reversed()
 
-            val headers = mapOf(
-                "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-                "Referer" to "subtitleUrl"
-            )
-            val subtitleResponse = app.get(subtitleUrl, headers = headers, allowRedirects=true, interceptor = interceptor)
-            if (subtitleResponse.isSuccessful) {
-                subtitleCallback(newSubtitleFile(it.language.toString(), subtitleUrl))
-                Log.d("HDCH", "Subtitle added: $subtitleUrl")
-            } else {
-                Log.d("HDCH", "Subtitle URL inaccessible: ${subtitleResponse.code}")
+        fun base64(value: String): String {
+            val padded = value + "=".repeat((4 - value.length % 4) % 4)
+            return String(android.util.Base64.decode(padded, android.util.Base64.DEFAULT), Charsets.ISO_8859_1)
+        }
+        fun rot13(value: String) = value.map { c ->
+            when (c) {
+                in 'a'..'z' -> ('a'.code + (c - 'a' + 13) % 26).toChar()
+                in 'A'..'Z' -> ('A'.code + (c - 'A' + 13) % 26).toChar()
+                else -> c
+            }
+        }.joinToString("")
+        fun unmix(value: String) = buildString(value.length) {
+            value.forEachIndexed { i, c ->
+                append(((c.code.toLong() - (399756995L % (i + 5)) + 256L) % 256L).toInt().toChar())
             }
         }
-        callback.invoke(
-            newExtractorLink(
-                source  = source,
-                name    = source,
-                url     = lastUrl,
-                type    = ExtractorLinkType.M3U8
-            ) {
-                headers = mapOf("Referer" to "${mainUrl}/", "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Norton/124.0.0.0")
-                quality = Qualities.Unknown.value
-            }
+        fun valid(value: String?) = value != null && value.startsWith("https://") &&
+            (value.contains(".m3u8") || value.contains("/hls/") || value.contains(".mp4"))
+
+        val candidates = listOf(
+            { unmix(rot13(base64(joined).reversed())) },
+            { unmix(base64(rot13(reversed))) },
+            { unmix(rot13(base64(reversed))) }
         )
-    }
-
-override suspend fun loadLinks(
-    data: String,
-    isCasting: Boolean,
-    subtitleCallback: (SubtitleFile) -> Unit,
-    callback: (ExtractorLink) -> Unit
-): Boolean {
-    Log.d("HDCH", "data » $data")
-    val document = app.get(data, interceptor = interceptor).document
-
-    document.select("div.alternative-links").map { element ->
-        element to element.attr("data-lang").uppercase()
-    }.forEach { (element, langCode) ->
-        element.select("button.alternative-link").map { button ->
-            button.text().replace("(HDrip Xbet)", "").trim() + " $langCode" to button.attr("data-video")
-        }.forEach { (source, videoID) ->
-            val apiGet = app.get(
-                "${mainUrl}/video/$videoID/", interceptor = interceptor,
-                headers = mapOf(
-                    "Content-Type" to "application/json",
-                    "X-Requested-With" to "fetch"
-                ),
-                referer = data
-            ).text
-            Log.d("HDCH", "Found videoID: $videoID")
-            var iframe = Regex("""data-src=\\"([^"]+)""").find(apiGet)?.groupValues?.get(1)!!.replace("\\", "")
-            Log.d("HDCH", "$iframe » $iframe")
-            if (iframe.contains("rapidrame")) {
-                iframe = "${mainUrl}/rplayer/" + iframe.substringAfter("?rapidrame_id=")
-            } else if (iframe.contains("mobi")) {
-                val iframeDoc = Jsoup.parse(apiGet)
-                iframe = fixUrlNull(iframeDoc.selectFirst("iframe")?.attr("data-src")) ?: return@forEach
-            }
-            Log.d("HDCH", "$source » $videoID » $iframe")
-            invokeLocalSource(source, iframe, subtitleCallback, callback)
+        return candidates.firstNotNullOfOrNull { decode ->
+            runCatching { decode() }.getOrNull()?.takeIf(::valid)
         }
     }
-    return true
-}
+
+    private suspend fun invokeLocalSource(
+        source: String,
+        url: String,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        val response = app.get(url, referer = "${mainUrl}/", interceptor = interceptor)
+        val document = response.document
+        var videoUrl: String? = null
+        for (script in document.select("script").map { it.data() }.filter { it.isNotBlank() }) {
+            val unpacked = if (script.contains("eval(function")) runCatching { getAndUnpack(script) }.getOrDefault(script) else script
+            videoUrl = decodeKnownVariants(unpacked)
+                ?: decryptLocalUrl(unpacked)
+                ?: Regex("""["']contentUrl["']\s*:\s*["']([^"']+)["']""").find(unpacked)?.groupValues?.get(1)
+            if (!videoUrl.isNullOrBlank()) break
+        }
+        val stream = videoUrl?.substringAfter("https", "")?.takeIf { it.isNotBlank() }?.let { "https$it" } ?: return false
+        val origin = runCatching { java.net.URI(url).let { "${it.scheme}://${it.host}" } }.getOrDefault(mainUrl)
+        document.select("track[src]").forEach { track ->
+            val subUrl = fixUrlNull(track.attr("src")) ?: return@forEach
+            subtitleCallback(newSubtitleFile(track.attr("label").ifBlank { "Altyazı" }, subUrl))
+        }
+        callback(newExtractorLink(
+            source, source, stream,
+            if (stream.contains(".mp4")) ExtractorLinkType.VIDEO else ExtractorLinkType.M3U8
+        ) {
+            referer = url
+            headers = mapOf("Referer" to url, "Origin" to origin)
+            quality = Qualities.Unknown.value
+        })
+        return true
+    }
+
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        val document = app.get(data, interceptor = interceptor).document
+        val sources = mutableListOf<Pair<String, String>>()
+        document.select("iframe[src], iframe[data-src]").firstOrNull()?.let { frame ->
+            val src = frame.attr("src").ifBlank { frame.attr("data-src") }
+            if (src.isNotBlank()) sources += "Ana Kaynak" to src
+        }
+        document.select("div.alternative-links").map { element ->
+            element to element.attr("data-lang").uppercase()
+        }.forEach { (element, langCode) ->
+            element.select("button.alternative-link").map { button ->
+                button.text().replace("(HDrip Xbet)", "").trim() + " $langCode" to button.attr("data-video")
+            }.forEach { (source, videoID) ->
+                val apiGet = app.get(
+                    "${mainUrl}/video/$videoID/", interceptor = interceptor,
+                    headers = mapOf("Content-Type" to "application/json", "X-Requested-With" to "fetch"),
+                    referer = data
+                ).text
+                var iframe = Regex("""data-src=\\"([^"]+)""").find(apiGet)?.groupValues?.get(1)?.replace("\\", "")
+                    ?: Jsoup.parse(apiGet.replace("\\", "")).selectFirst("iframe")
+                        ?.let { it.attr("src").ifBlank { it.attr("data-src") } }
+                    ?: return@forEach
+                if (iframe.contains("rapidrame")) {
+                    iframe = "${mainUrl}/rplayer/" + iframe.substringAfter("?rapidrame_id=")
+                } else if (iframe.contains("mobi")) {
+                    val iframeDoc = Jsoup.parse(apiGet)
+                    iframe = fixUrlNull(iframeDoc.selectFirst("iframe")?.attr("data-src")) ?: return@forEach
+                }
+                sources += source to iframe
+            }
+        }
+        var found = false
+        for ((source, rawUrl) in sources.distinct()) {
+            val iframe = fixUrlNull(rawUrl) ?: continue
+            try {
+                if (invokeLocalSource(source, iframe, subtitleCallback, callback)) found = true
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("HDCH", "Kaynak çözülemedi: $iframe", e)
+            }
+        }
+        return found
+    }
     private data class SubSource(
         @JsonProperty("file")    val file: String?  = null,
         @JsonProperty("label")   val label: String? = null,

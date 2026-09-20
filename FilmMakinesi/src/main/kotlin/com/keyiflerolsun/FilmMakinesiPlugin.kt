@@ -11,5 +11,6 @@ class FilmMakinesiPlugin: Plugin() {
         //registerExtractorAPI(FilmMakinesiWebViewExtractor(context))
         registerExtractorAPI(CloseLoadExtractor())
         registerExtractorAPI(RapidExtractor())
+        registerExtractorAPI(CurrentRapidExtractor())
     }
 }
