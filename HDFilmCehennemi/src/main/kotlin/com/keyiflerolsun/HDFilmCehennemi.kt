@@ -494,39 +494,6 @@ class HDFilmCehennemi : MainAPI() {
         }
         val stream = videoUrl?.substringAfter("https", "")?.takeIf { it.isNotBlank() }?.let { "https$it" } ?: return false
         val origin = runCatching { java.net.URI(url).let { "${it.scheme}://${it.host}" } }.getOrDefault(mainUrl)
-        val subtitleUrls = mutableSetOf<String>()
-        document.select("track[src]").forEach { track ->
-            val subUrl = fixUrlNull(track.attr("src")) ?: return@forEach
-            if (subtitleUrls.add(subUrl)) {
-                subtitleCallback(newSubtitleFile(track.attr("label").ifBlank { "Altyazı" }, subUrl) {
-                    headers = mapOf("Referer" to url, "Origin" to origin)
-                })
-            }
-        }
-        Regex("""tracks\s*:\s*\[(.*?)]""", RegexOption.DOT_MATCHES_ALL)
-            .findAll(response.text)
-            .forEach { tracks ->
-                Regex("""\{[^{}]*}""").findAll(tracks.groupValues[1]).forEach { item ->
-                    val file = Regex("""["']file["']\s*:\s*["'](.*?)["']""")
-                        .find(item.value)?.groupValues?.get(1)
-                        ?.replace("\\/", "/")
-                        ?.replace("\\u0026", "&")
-                        ?: return@forEach
-                    val label = Regex("""["']label["']\s*:\s*["'](.*?)["']""")
-                        .find(item.value)?.groupValues?.get(1)?.trim().orEmpty()
-                    val language = when {
-                        label.equals("Forced", true) && file.contains("-tur-", true) -> "Turkish Forced"
-                        label.isNotBlank() -> label
-                        file.contains("-tur-", true) -> "Turkish"
-                        else -> "Altyazı"
-                    }
-                    if (subtitleUrls.add(file)) {
-                        subtitleCallback(newSubtitleFile(language, file) {
-                            headers = mapOf("Referer" to url, "Origin" to origin)
-                        })
-                    }
-                }
-        }
         callback(newExtractorLink(
             source, source, stream,
             if (stream.contains(".m3u8") || stream.contains("/hls/") || stream.contains("master.txt")) {
@@ -539,6 +506,42 @@ class HDFilmCehennemi : MainAPI() {
             headers = mapOf("Referer" to "$origin/", "Origin" to origin)
             quality = Qualities.Unknown.value
         })
+        // Subtitles are optional: a malformed entry must never discard an already resolved video.
+        try {
+            val subtitleUrls = mutableSetOf<String>()
+            document.select("track[src]").forEach { track ->
+                val subUrl = fixUrlNull(track.attr("src")) ?: return@forEach
+                if (subtitleUrls.add(subUrl)) {
+                    subtitleCallback(newSubtitleFile(track.attr("label").ifBlank { "Altyazı" }, subUrl))
+                }
+            }
+            Regex("""tracks\s*:\s*\[(.*?)]""", RegexOption.DOT_MATCHES_ALL)
+                .findAll(response.text)
+                .forEach { tracks ->
+                    Regex("""\{[^{}]*}""").findAll(tracks.groupValues[1]).forEach { item ->
+                        val file = Regex("""["']file["']\s*:\s*["'](.*?)["']""")
+                            .find(item.value)?.groupValues?.get(1)
+                            ?.replace("\\/", "/")
+                            ?.replace("\\u0026", "&")
+                            ?: return@forEach
+                        val label = Regex("""["']label["']\s*:\s*["'](.*?)["']""")
+                            .find(item.value)?.groupValues?.get(1)?.trim().orEmpty()
+                        val language = when {
+                            label.equals("Forced", true) && file.contains("-tur-", true) -> "Turkish Forced"
+                            label.isNotBlank() -> label
+                            file.contains("-tur-", true) -> "Turkish"
+                            else -> "Altyazı"
+                        }
+                        if (subtitleUrls.add(file)) {
+                            subtitleCallback(newSubtitleFile(language, file))
+                        }
+                    }
+                }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w("HDCH", "Altyazılar ayrıştırılamadı", e)
+        }
         return true
     }
 
