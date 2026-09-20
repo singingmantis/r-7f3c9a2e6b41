@@ -4,6 +4,7 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import local.personal.evdizigom.BuildConfig
 import local.personal.resolvePersonalPlayer
+import local.personal.diziGomCards
 import org.jsoup.nodes.Document
 import java.net.URLEncoder
 
@@ -13,17 +14,15 @@ class DiziGom : MainAPI() {
     override var lang = "tr"
     override val hasMainPage = true
     override val supportedTypes = setOf(TvType.TvSeries)
-    override val mainPage = mainPageOf("$mainUrl/" to "Diziler")
-    private fun Document.results(): List<SearchResponse> = select("a[href*=/diziler/]").mapNotNull { a ->
-        val href = fixUrl(a.attr("href"))
-        val title = a.attr("title").ifBlank { a.text().trim() }.ifBlank { a.selectFirst("img")?.attr("title").orEmpty() }
-        if (title.isBlank()) return@mapNotNull null
-        val image = a.selectFirst("img") ?: a.parent()?.selectFirst("img")
-        newTvSeriesSearchResponse(title, href, TvType.TvSeries) { posterUrl = fixUrlNull(image?.attr("src")) }
-    }.distinctBy { it.url }
+    override val mainPage = mainPageOf("$mainUrl/dizi-izle/" to "Diziler")
+    private fun Document.results(): List<SearchResponse> = diziGomCards(this, mainUrl).map { card ->
+        newTvSeriesSearchResponse(card.title, card.url, TvType.TvSeries) { posterUrl = card.poster }
+    }
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val doc = app.get(mainUrl).document
-        return newHomePageResponse(listOf(HomePageList(request.name, doc.results())), false)
+        val url = if (page == 1) request.data else "${request.data.trimEnd('/')}/page/$page/"
+        val doc = app.get(url).document
+        return newHomePageResponse(listOf(HomePageList(request.name, doc.results())),
+            doc.select("a.next.page-numbers, a[rel=next]").isNotEmpty())
     }
     override suspend fun search(query: String): List<SearchResponse> {
         val results = app.get("$mainUrl/?s=${URLEncoder.encode(query, "UTF-8")}").document.results()

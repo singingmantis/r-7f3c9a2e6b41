@@ -38,7 +38,7 @@ jobs:
       - name: Compile personal plugins
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon :EvFilmModu:testDebugUnitTest :EvRareFilmm:testDebugUnitTest :EvFullHDFilmizlesene:testDebugUnitTest makePluginsJson
+          ./gradlew --no-daemon :EvDiziGom:testDebugUnitTest :EvFilmModu:testDebugUnitTest :EvRareFilmm:testDebugUnitTest :EvFullHDFilmizlesene:testDebugUnitTest makePluginsJson
       - name: Validate packages and prepare catalog
         env:
           REPOSITORY: ${{ github.repository }}

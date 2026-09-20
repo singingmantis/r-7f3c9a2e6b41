@@ -1,5 +1,7 @@
 version = 1000 + (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
 
+dependencies { add("testImplementation", "junit:junit:4.13.2") }
+
 cloudstream {
     authors     = listOf("nikyokki")
     language    = "tr"
